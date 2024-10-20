@@ -31,7 +31,7 @@ So this tool is modified from [Geeqie](https://github.com/BestImageViewer/geeqie
 ## Usage
 
 - Compile the code `$ g++ -o cr3-to-jpeg cr3-to-jpeg.cpp`
-- Run the program `$ ./cr3-to-jpeg your_image.CR3 output.jpg`
+- Run the program `$ ./cr3-to-jpeg /path/to/your/directory`
 - (optional) Move the executable where you want it
 
 

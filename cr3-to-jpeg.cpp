@@ -1,14 +1,17 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <string>
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 bool extractThumbnail(const char *inputFile, const char *outputFile) {
     // Open the input CR3 file
     ifstream inFile(inputFile, ios::binary);
     if (!inFile) {
-        cerr << "Error opening input file." << endl;
+        cerr << "Error opening input file: " << inputFile << endl;
         return false;
     }
 
@@ -40,7 +43,7 @@ bool extractThumbnail(const char *inputFile, const char *outputFile) {
                     // Write the thumbnail to the output file
                     ofstream outFile(outputFile, ios::binary);
                     if (!outFile) {
-                        cerr << "Error creating output file." << endl;
+                        cerr << "Error creating output file: " << outputFile << endl;
                         delete[] buf;
                         return false;
                     }
@@ -60,7 +63,7 @@ bool extractThumbnail(const char *inputFile, const char *outputFile) {
     delete[] buf;
 
     if (!found) {
-        cerr << "No JPEG thumbnail found." << endl;
+        cerr << "No JPEG thumbnail found in: " << inputFile << endl;
         return false;
     }
 
@@ -68,19 +71,36 @@ bool extractThumbnail(const char *inputFile, const char *outputFile) {
     return true;
 }
 
+string getOutputFileName(const fs::path& inputFile) {
+    return inputFile.stem().string() + ".jpg";  // Use stem() to get the filename without extension
+}
+
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        cerr << "Usage: " << argv[0] << " <input.CR3> <output.jpg>" << endl;
+    if (argc != 2) {
+        cerr << "Usage: " << argv[0] << " <input_directory>" << endl;
         return 1;
     }
 
-    const char *inputFile = argv[1];
-    const char *outputFile = argv[2];
+    fs::path inputDir(argv[1]);
 
-    if (!extractThumbnail(inputFile, outputFile)) {
+    if (!fs::is_directory(inputDir)) {
+        cerr << "Error: " << argv[1] << " is not a valid directory." << endl;
         return 1;
+    }
+
+    for (const auto& entry : fs::directory_iterator(inputDir)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".CR3") {
+            const auto& inputFile = entry.path();
+            string outputFile = getOutputFileName(inputFile);
+            outputFile = inputDir / outputFile; // Output in the same directory
+
+            if (!extractThumbnail(inputFile.string().c_str(), outputFile.c_str())) {
+                return 1;
+            }
+        }
     }
 
     return 0;
 }
+
 
