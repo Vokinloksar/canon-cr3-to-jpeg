@@ -74,6 +74,22 @@ bool extractThumbnail(const char *inputFile, const char *outputFile) {
 string getOutputFileName(const fs::path& inputFile) {
     return inputFile.stem().string() + ".jpg";  // Use stem() to get the filename without extension
 }
+bool copyExifData(const std::string& sourceFile, const std::string& destinationFile) {
+    // Build the command string
+    std::string command = "exiftool -overwrite_original -tagsFromFile \"" + sourceFile + "\" -all:all \"" + destinationFile + "\"";
+
+    // Execute the command
+    int result = system(command.c_str());
+
+    // Check if the command was successful
+    if (result != 0) {
+        cerr << "Error executing command: " << command << endl;
+        return false;
+    }
+
+    cout << "EXIF data copied from " << sourceFile << " to " << destinationFile << endl;
+    return true;
+}
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -97,6 +113,10 @@ int main(int argc, char **argv) {
             if (!extractThumbnail(inputFile.string().c_str(), outputFile.c_str())) {
                 return 1;
             }
+            if (!copyExifData(inputFile.string().c_str(), outputFile.c_str())) {
+                return 1;
+            }
+
         }
     }
 
