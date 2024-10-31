@@ -76,7 +76,8 @@ string getOutputFileName(const fs::path& inputFile) {
 }
 bool copyExifData(const std::string& sourceFile, const std::string& destinationFile) {
     // Build the command string
-    std::string command = "exiftool -overwrite_original -tagsFromFile \"" + sourceFile + "\" -all:all \"" + destinationFile + "\"";
+    std::string command = "exiftool   -overwrite_original  -tagsFromFile \"" + sourceFile + "\" -all:all \"" +  destinationFile + "\"" + " && exiftool -overwrite_original -exif:FocalLength=\"23\" -exif:fnumber=0 -exif:MaxApertureValue=1.4 -maxAperture=1.4 -lenstype=\"TTartisan EF-M 23mm f/1.4 M\" -lensmodel=\"TTartisan EF-M 23mm f/1.4 M\" " + destinationFile;
+
 
     // Execute the command
     int result = system(command.c_str());
