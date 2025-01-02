@@ -7,6 +7,10 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+bool fileExists(const std::string& path) {
+    return std::filesystem::exists(path);
+}
+
 bool extractThumbnail(const char *inputFile, const char *outputFile) {
     // Open the input CR3 file
     ifstream inFile(inputFile, ios::binary);
@@ -111,13 +115,16 @@ int main(int argc, char **argv) {
             string outputFile = getOutputFileName(inputFile);
             outputFile = inputDir / outputFile; // Output in the same directory
 
-            if (!extractThumbnail(inputFile.string().c_str(), outputFile.c_str())) {
-                return 1;
+            if (fileExists(outputFile.c_str())) {
+                cout << "Skip existing output file: " << outputFile << endl;
+            } else {
+                if (!extractThumbnail(inputFile.string().c_str(), outputFile.c_str())) {
+                    return 1;
+                }
+                if (!copyExifData(inputFile.string().c_str(), outputFile.c_str())) {
+                    return 1;
+                }
             }
-            if (!copyExifData(inputFile.string().c_str(), outputFile.c_str())) {
-                return 1;
-            }
-
         }
     }
 
