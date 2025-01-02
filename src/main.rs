@@ -78,7 +78,7 @@ fn extract_thumbnail(input_file: &Path, output_file: &Path) -> bool {
 
 fn compress_image(source_file: &Path) -> bool {
 let command = format!(
-        "magick \"{}\" -resize 3000x3000\\>  \"{}\" ",
+        "magick \"{}\" -resize 1660x1660\\>  \"{}\" ",
         source_file.display(),
          source_file.display(),
         );
