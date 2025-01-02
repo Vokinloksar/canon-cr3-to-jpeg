@@ -30,9 +30,10 @@ So this tool is modified from [Geeqie](https://github.com/BestImageViewer/geeqie
 
 ## Usage
 
-- Compile the code `$ g++ -o cr3-to-jpeg cr3-to-jpeg.cpp`
-- Run the program `$ ./cr3-to-jpeg /path/to/your/directory`
+- Compile the code `$ cargo build `
+- Run the program `$ cargo run -- /path/to/your/directory`
 - (optional) Move the executable where you want it
+  - `mv ./target/release/<executable> ~/.cargo/bin`
 
 
 
@@ -40,3 +41,4 @@ So this tool is modified from [Geeqie](https://github.com/BestImageViewer/geeqie
 
 - All the CR3 tests are done with my Canon M6 Mark2 Camera. 
 - Limited tested
+- Why not use webp: lack of exif support, no way to copy exif from jpg to webp 

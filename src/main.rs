@@ -70,8 +70,27 @@ fn extract_thumbnail(input_file: &Path, output_file: &Path) -> bool {
         return false;
     }
 
-    println!("Thumbnail extracted as '{}'", output_file.display());
+    // println!("Thumbnail extracted as '{}'", output_file.display());
     true
+}
+
+
+
+fn compress_image(source_file: &Path) -> bool {
+let command = format!(
+        "magick \"{}\" -resize 3000x3000\\>  \"{}\" ",
+        source_file.display(),
+         source_file.display(),
+        );
+    match Command::new("sh").arg("-c").arg(command).status() {
+        Ok(status) if status.success() => {
+            true
+        }
+        _ => {
+            eprintln!("Error executing command");
+            false
+        }
+    }
 }
 
 fn copy_exif_data(source_file: &Path, destination_file: &Path) -> bool {
@@ -86,33 +105,21 @@ fn copy_exif_data(source_file: &Path, destination_file: &Path) -> bool {
         .map(|output| !output.stdout.is_empty())
         .unwrap_or(false);
 
-    if lenstype_present {
-        println!(
-            "lenstype already present in {}, skipping.",
-            destination_file.display()
-        );
-    } else {
-        println!(
-            "lenstype not present in {}, using TTartisan 23mm.",
-            destination_file.display()
-        );
-    }
-
     // Copy EXIF data and add new metadata
     let command = if !lenstype_present {
         format!(
-            "exiftool -overwrite_original -tagsFromFile \"{}\" -all:all \"{}\" \
+            "exiftool -overwrite_original -tagsFromFile \"{}\" -all:all \"{}\" >/dev/null \
          && exiftool -overwrite_original -exif:FocalLength=\"23\" -exif:fnumber=0 \
          -exif:MaxApertureValue=1.4 -maxAperture=1.4 \
          -lenstype=\"TTartisan EF-M 23mm f/1.4 M\" \
-         -lensmodel=\"TTartisan EF-M 23mm f/1.4 M\" \"{}\"",
+         -lensmodel=\"TTartisan EF-M 23mm f/1.4 M\" \"{}\" >/dev/null",
             source_file.display(),
             destination_file.display(),
             destination_file.display()
         )
     } else {
         format!(
-            "exiftool -overwrite_original -tagsFromFile \"{}\" -all:all \"{}\"",
+            "exiftool -overwrite_original -tagsFromFile \"{}\" -all:all \"{}\" >/dev/null",
             source_file.display(),
             destination_file.display()
         )
@@ -120,11 +127,11 @@ fn copy_exif_data(source_file: &Path, destination_file: &Path) -> bool {
 
     match Command::new("sh").arg("-c").arg(command).status() {
         Ok(status) if status.success() => {
-            println!(
-                "EXIF data copied from {} to {}",
-                source_file.display(),
-                destination_file.display()
-            );
+            // println!(
+            //     "EXIF data copied from {} to {}",
+            //     source_file.display(),
+            //     destination_file.display()
+            // );
             true
         }
         _ => {
@@ -133,7 +140,7 @@ fn copy_exif_data(source_file: &Path, destination_file: &Path) -> bool {
         }
     }
 }
-fn get_output_file_name(input_file: &Path) -> PathBuf {
+fn get_output_jpg_name(input_file: &Path) -> PathBuf {
     let mut output = input_file.with_extension("jpg");
     output.set_file_name(format!(
         "{}.jpg",
@@ -141,6 +148,7 @@ fn get_output_file_name(input_file: &Path) -> PathBuf {
     ));
     output
 }
+
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -164,16 +172,19 @@ fn main() {
     entries.par_iter().for_each(|entry| {
         let path = entry.path();
         if path.is_file() && path.extension().map_or(false, |ext| ext == "CR3") {
-            let output_file = input_dir.join(get_output_file_name(&path));
+            let output_jpg = input_dir.join(get_output_jpg_name(&path));
 
-            if file_exists(&output_file) {
-                println!("Skip existing output file: {}", output_file.display());
+            if file_exists(&output_jpg) {
+                println!("Skip existing output file: {}", output_jpg.display());
             } else {
-                if !extract_thumbnail(&path, &output_file) {
+                if !extract_thumbnail(&path, &output_jpg) {
                     eprintln!("Failed to extract thumbnail for: {}", path.display());
                 }
-                if !copy_exif_data(&path, &output_file) {
+                if !copy_exif_data(&path, &output_jpg) {
                     eprintln!("Failed to copy EXIF data for: {}", path.display());
+                }
+                if !compress_image(&output_jpg) {
+                    eprintln!("Failed to compress image for: {}", path.display());
                 }
             }
         }
